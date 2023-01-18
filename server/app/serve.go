@@ -25,7 +25,7 @@ import (
 
 	"github.com/sigstore/timestamp-authority/pkg/log"
 	"github.com/sigstore/timestamp-authority/pkg/ntpmonitor"
-	"github.com/sigstore/timestamp-authority/pkg/server"
+	"github.com/sigstore/timestamp-authority/server/pkg/server"
 )
 
 // serveCmd represents the serve command
