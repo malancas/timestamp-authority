@@ -17,9 +17,9 @@
 
 all: timestamp-cli timestamp-server
 
-GENSRC = pkg/generated/client/%.go pkg/generated/models/%.go pkg/generated/restapi/%.go
+GENSRC = server/pkg/generated/client/%.go server/pkg/generated/models/%.go server/pkg/generated/restapi/%.go
 OPENAPIDEPS = openapi.yaml
-SRCS = $(shell find cmd -iname "*.go") $(shell find pkg -iname "*.go"|grep -v pkg/generated) pkg/generated/restapi/configure_timestamp_server.go $(GENSRC)
+SRCS = $(shell find . -iname "*.go") $(shell find pkg -iname "*.go"|grep -v server/pkg/generated) server/pkg/generated/restapi/configure_timestamp_server.go $(GENSRC)
 TOOLS_DIR := hack/tools
 TOOLS_BIN_DIR := $(abspath $(TOOLS_DIR)/bin)
 
@@ -62,7 +62,7 @@ validate-openapi: $(SWAGGER)
 	$(SWAGGER) validate openapi.yaml
 
 # this exists to override pattern match rule above since this file is in the generated directory but should not be treated as generated code
-pkg/generated/restapi/configure_timestamp_server.go: $(OPENAPIDEPS)
+server/pkg/generated/restapi/configure_timestamp_server.go: $(OPENAPIDEPS)
 
 lint:
 	$(GOBIN)/golangci-lint run -v ./...
@@ -73,10 +73,10 @@ gosec:
 gen: $(GENSRC)
 .PHONY : timestamp-cli
 timestamp-cli: $(SRCS)
-	CGO_ENABLED=0 go build -trimpath -ldflags "$(CLI_LDFLAGS)" -o bin/timestamp-cli ./cmd/timestamp-cli
+	CGO_ENABLED=0 go build -trimpath -ldflags "$(CLI_LDFLAGS)" -o bin/timestamp-cli ./cli
 
 timestamp-server: $(SRCS)
-	CGO_ENABLED=0 go build -trimpath -ldflags "$(SERVER_LDFLAGS)" -o bin/timestamp-server ./cmd/timestamp-server
+	CGO_ENABLED=0 go build -trimpath -ldflags "$(SERVER_LDFLAGS)" -o bin/timestamp-server ./server
 
 test: timestamp-cli
 	go test ./...
@@ -98,13 +98,13 @@ ko:
 	LDFLAGS="$(LDFLAGS)" GIT_HASH=$(GIT_HASH) GIT_VERSION=$(GIT_VERSION) \
 	KO_DOCKER_REPO=$(KO_PREFIX)/timestamp-server ko build --bare \
 		--platform=all --tags $(GIT_VERSION) --tags $(GIT_HASH) \
-		--image-refs timestampServerImagerefs github.com/sigstore/timestamp-authority/cmd/timestamp-server
+		--image-refs timestampServerImagerefs github.com/sigstore/timestamp-authority/server
 
 	# timestamp-cli
 	LDFLAGS="$(LDFLAGS)" GIT_HASH=$(GIT_HASH) GIT_VERSION=$(GIT_VERSION) \
 	KO_DOCKER_REPO=$(KO_PREFIX)/timestamp-cli ko build --bare \
 		--platform=all --tags $(GIT_VERSION) --tags $(GIT_HASH) \
-		--image-refs timestampCLIImagerefs github.com/sigstore/timestamp-authority/cmd/timestamp-cli
+		--image-refs timestampCLIImagerefs github.com/sigstore/timestamp-authority/cli
 
 .PHONY: ko-local
 ko-local:
